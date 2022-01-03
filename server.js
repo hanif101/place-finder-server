@@ -67,8 +67,8 @@ app.use(reviewRoutes)
 app.use(errorHandler)
 
 // run API on designated port (4741 in this case)
-app.listen(serverport, () => {
-	console.log(':: APP listening on port ' + serverport)
+app.listen(process.env.PORT || serverport, () => {
+	console.log(':: APP listening on port ' + proccess.env.PORT)
 })
 
 // needed for testing
