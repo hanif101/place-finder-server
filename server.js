@@ -68,7 +68,7 @@ app.use(errorHandler)
 
 // run API on designated port (4741 in this case)
 app.listen(process.env.PORT || serverport, () => {
-	console.log(':: APP listening on port ' + proccess.env.PORT)
+	console.log(':: APP listening on port ' + process.env.PORT)
 })
 
 // needed for testing
