@@ -4,6 +4,9 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 const cors = require('cors')
 
+
+// for test purpose
+
 // require database file
 const db = require('./config/db/db')
 
