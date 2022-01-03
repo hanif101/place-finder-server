@@ -7,11 +7,14 @@ const mongoose = require('mongoose')
 // use createIndex instead of deprecated ensureIndex
 const db = () => {
 	mongoose
-		.connect(process.env.ATLAS_URI, {
-			useNewUrlParser: true,
-			useCreateIndex: true,
-			useUnifiedTopology: true,
-		})
+		.connect(
+			'mongodb+srv://admin:admin@ga-projects.zra0m.mongodb.net/feed-me?retryWrites=true&w=majority',
+			{
+				useNewUrlParser: true,
+				useCreateIndex: true,
+				useUnifiedTopology: true,
+			}
+		)
 		.then(console.log(':: MONGO_ATLAS connecttion successfull'))
 		.catch(console.log)
 }

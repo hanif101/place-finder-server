@@ -23,9 +23,12 @@ const requestLogger = require('./lib/request_logger')
 // establish dotenv config path
 dotenv.config({ path: 'config/dotenv/config.env' })
 
+const SERVER_PORT = 3000
+const CLIENT_PORT = 7165
+
 // define server and client ports
 // used for cors and local port declaration
-const serverport = process.env.SERVER_PORT
+
 // const clientport = process.env.CLIENT_PORT
 
 // establish database connection
@@ -40,8 +43,7 @@ const app = express()
 app.use(
 	cors({
 		origin:
-			process.env.CLIENT_ORIGIN ||
-			`http://localhost:${process.env.CLIENT_PORT}`,
+			process.env.CLIENT_ORIGIN || `http://localhost:${CLIENT_PORT}`,
 	})
 )
 
@@ -65,10 +67,11 @@ app.use(reviewRoutes)
 
 // register error handling middleware
 app.use(errorHandler)
+console.log(process.env.PORT)
 
 // run API on designated port (4741 in this case)
-app.listen(process.env.PORT || serverport, () => {
-	console.log(':: APP listening on port ' + process.env.PORT)
+app.listen(SERVER_PORT, () => {
+	console.log(':: APP listening on port ' + SERVER_PORT)
 })
 
 // needed for testing
