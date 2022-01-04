@@ -20,7 +20,7 @@ const User = require('../models/User')
 // so that a token MUST be passed for that route to be available
 // it will also set `res.user`
 const requireToken = passport.authenticate('bearer', {
-	session: false,
+  session: false
 })
 
 // instantiate a router (mini app that only handles routes)
@@ -29,126 +29,126 @@ const router = express.Router()
 // SIGN UP
 // POST /sign-up
 router.post(
-	'/sign-up',
-	asyncErrorWrapper(async (req, res, next) => {
-		// get and check credentials
-		const credentials = req.body.credentials
-		if (
-			!credentials ||
+  '/sign-up',
+  asyncErrorWrapper(async (req, res, next) => {
+    // get and check credentials
+    const credentials = req.body.credentials
+    if (
+      !credentials ||
 			!credentials.username ||
 			!credentials.password ||
 			credentials.password !== credentials.password_confirmation
-		) {
-			throw new BadParamsError()
-		}
+    ) {
+      throw new BadParamsError()
+    }
 
-		// await hash password
-		const hash = await bcrypt.hash(
-			req.body.credentials.password,
-			bcryptSaltRounds
-		)
+    // await hash password
+    const hash = await bcrypt.hash(
+      req.body.credentials.password,
+      bcryptSaltRounds
+    )
 
-		// await create user
-		const user = await User.create({
-			username: req.body.credentials.username,
-			email: req.body.credentials.email,
-			hashedPassword: hash,
-		})
-		// response
-		res.status(201).json({ user: user.toObject() })
-	})
+    // await create user
+    const user = await User.create({
+      username: req.body.credentials.username,
+      email: req.body.credentials.email,
+      hashedPassword: hash
+    })
+    // response
+    res.status(201).json({ user: user.toObject() })
+  })
 )
 
 // SIGN IN
 // POST /sign-in
 router.post(
-	'/sign-in',
-	asyncErrorWrapper(async (req, res, next) => {
-		const pw = req.body.credentials.password
+  '/sign-in',
+  asyncErrorWrapper(async (req, res, next) => {
+    const pw = req.body.credentials.password
 
-		// find user
-		const user = await User.findOne({
-			email: req.body.credentials.email,
-		})
+    // find user
+    const user = await User.findOne({
+      email: req.body.credentials.email
+    })
 
-		// if no user
-		if (!user) {
-			throw new BadCredentialsError()
-		}
+    // if no user
+    if (!user) {
+      throw new BadCredentialsError()
+    }
 
-		//compare passwords
-		let compare_passwords = await bcrypt.compare(
-			pw,
-			user.hashedPassword
-		)
+    // compare passwords
+    let compare_passwords = await bcrypt.compare(
+      pw,
+      user.hashedPassword
+    )
 
-		// if passwords correct
-		if (compare_passwords) {
-			// add token
-			const token = crypto.randomBytes(16).toString('hex')
-			user.token = token
+    // if passwords correct
+    if (compare_passwords) {
+      // add token
+      const token = crypto.randomBytes(16).toString('hex')
+      user.token = token
 
-			// save  user
-			await user.save()
-		} else {
-			// if password wrong
-			throw new BadCredentialsError()
-		}
+      // save  user
+      await user.save()
+    } else {
+      // if password wrong
+      throw new BadCredentialsError()
+    }
 
-		// response
-		res.status(201).json({ user: user.toObject() })
-	})
+    // response
+    res.status(201).json({ user: user.toObject() })
+  })
 )
 
 // CHANGE password
 // PATCH /change-password
 router.patch(
-	'/change-password',
-	requireToken,
-	asyncErrorWrapper(async (req, res, next) => {
-		//get user
-		let user = await User.findById(req.user.id)
+  '/change-password',
+  requireToken,
+  asyncErrorWrapper(async (req, res, next) => {
+    // get user
+    let user = await User.findById(req.user.id)
 
-		// check password to make sure the owner is right user
-		let correctPassword = await bcrypt.compare(
-			req.body.passwords.old,
-			user.hashedPassword
-		)
+    // check password to make sure the owner is right user
+    let correctPassword = await bcrypt.compare(
+      req.body.passwords.old,
+      user.hashedPassword
+    )
 
-		if (!correctPassword || !req.body.passwords.new) {
-			throw new BadParamsError()
-		}
+    if (!correctPassword || !req.body.passwords.new) {
+      throw new BadParamsError()
+    }
 
-		//hash new password
-		let newHashedPassword = await bcrypt.hash(
-			req.body.passwords.new,
-			bcryptSaltRounds
-		)
+    // hash new password
+    let newHashedPassword = await bcrypt.hash(
+      req.body.passwords.new,
+      bcryptSaltRounds
+    )
 
-		// change pwd
-		user.hashedPassword = newHashedPassword
+    // change pwd
+    user.hashedPassword = newHashedPassword
 
-		//save user
-		await user.save()
+    // save user
+    await user.save()
 
-		// response
-		res.sendStatus(204)
-	})
+    // response
+    res.sendStatus(204)
+  })
 )
 
 router.delete(
-	'/sign-out',
-	requireToken,
-	asyncErrorWrapper(async (req, res, next) => {
-		// change user token
-		req.user.token = await crypto.randomBytes(16).toString('hex')
+  '/sign-out',
+  requireToken,
+  asyncErrorWrapper(async (req, res, next) => {
+    // change user token
+    req.user.token = await crypto.randomBytes(16).toString('hex')
 
-		//save user
-		await req.user.save()
+    // save user
+    await req.user.save()
 
-		// response
-		res.sendStatus(204)
-	})
+    // response
+    res.sendStatus(204)
+  })
 )
 
 module.exports = router
