@@ -1,60 +1,64 @@
 // require necessary NPM packages
 const express = require('express')
 const mongoose = require('mongoose')
-const dotenv = require('dotenv')
 const cors = require('cors')
 
-
-// for test purpose
-
-// require database file
-const db = require('./config/db/db')
-
-// require configured passport authentication middleware
-const auth = require('./lib/auth')
+process.env.sikko = 99
 
 // require route files
-// const exampleRoutes = require('./app/routes/example_routes')
 const userRoutes = require('./app/routes/user_routes')
-const restaurantRoutes = require('./app/routes/restaurant_routes')
-const reviewRoutes = require('./app/routes/review_routes')
+// const restaurantRoutes = require('./app/routes/restaurant_routes')
+// const reviewRoutes = require('./app/routes/review_routes')
 
 // require middleware
 const errorHandler = require('./lib/error_handler')
 const requestLogger = require('./lib/request_logger')
 
-// establish dotenv config path
-dotenv.config({ path: 'config/dotenv/config.env' })
+// require database configuration logic
+// `db` will be the actual Mongo URI as a string
+const db = require('./config/db')
 
-const SERVER_PORT = 3000
-const CLIENT_PORT = 7165
+// require configured passport authentication middleware
+const auth = require('./lib/auth')
 
 // define server and client ports
 // used for cors and local port declaration
-
-// const clientport = process.env.CLIENT_PORT
+const serverDevPort = 4741
+const clientDevPort = 7165
 
 // establish database connection
-db()
+// use new version of URL parser
+// use createIndex instead of deprecated ensureIndex
+mongoose
+	.connect(db, {
+		useNewUrlParser: true,
+		useCreateIndex: true,
+		useUnifiedTopology: true,
+	})
+	.then(console.log('Mongo Atlas connection successful'))
 
 // instantiate express application object
 const app = express()
 
 // set CORS headers on response from this API using the `cors` NPM package
 // `CLIENT_ORIGIN` is an environment variable that will be set on Heroku
-
 app.use(
 	cors({
 		origin:
-			process.env.CLIENT_ORIGIN || `http://localhost:${CLIENT_PORT}`,
+			process.env.CLIENT_ORIGIN ||
+			`http://localhost:${clientDevPort}`,
 	})
 )
+
+// define port for API to run on
+const port = process.env.PORT || serverDevPort
 
 // register passport authentication middleware
 app.use(auth)
 
 // add `express.json` middleware which will parse JSON requests into
 // JS objects before they reach the route files.
+// The method `.use` sets up middleware for the Express application
 app.use(express.json())
 
 // this parses requests sent by `$.ajax`, which use a different content type
@@ -65,16 +69,15 @@ app.use(requestLogger)
 
 // routes
 app.use(userRoutes)
-app.use(restaurantRoutes)
-app.use(reviewRoutes)
+// app.use(restaurantRoutes)
+// app.use(reviewRoutes)
 
 // register error handling middleware
 app.use(errorHandler)
-console.log(process.env.PORT)
 
 // run API on designated port (4741 in this case)
-app.listen(SERVER_PORT, () => {
-	console.log(':: APP listening on port ' + SERVER_PORT)
+app.listen(port, () => {
+	console.log('Server listening on port ' + port)
 })
 
 // needed for testing
