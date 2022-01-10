@@ -3,6 +3,8 @@ const express = require('express')
 const crypto = require('crypto')
 const passport = require('passport')
 const bcrypt = require('bcrypt')
+// const store = require('../../config/store')
+// const axios = require('axios')
 const asyncErrorWrapper = require('express-async-handler')
 
 // see above for explanation of "salting", 10 rounds is recommended
@@ -35,18 +37,15 @@ router.post(
     const credentials = req.body.credentials
     if (
       !credentials ||
-			!credentials.username ||
-			!credentials.password ||
-			credentials.password !== credentials.password_confirmation
+      !credentials.username ||
+      !credentials.password ||
+      credentials.password !== credentials.password_confirmation
     ) {
       throw new BadParamsError()
     }
 
     // await hash password
-    const hash = await bcrypt.hash(
-      req.body.credentials.password,
-      bcryptSaltRounds
-    )
+    const hash = await bcrypt.hash(req.body.credentials.password, bcryptSaltRounds)
 
     // await create user
     const user = await User.create({
@@ -77,13 +76,10 @@ router.post(
     }
 
     // compare passwords
-    let compare_passwords = await bcrypt.compare(
-      pw,
-      user.hashedPassword
-    )
+    let comparePasswords = await bcrypt.compare(pw, user.hashedPassword)
 
     // if passwords correct
-    if (compare_passwords) {
+    if (comparePasswords) {
       // add token
       const token = crypto.randomBytes(16).toString('hex')
       user.token = token
@@ -110,20 +106,14 @@ router.patch(
     let user = await User.findById(req.user.id)
 
     // check password to make sure the owner is right user
-    let correctPassword = await bcrypt.compare(
-      req.body.passwords.old,
-      user.hashedPassword
-    )
+    let correctPassword = await bcrypt.compare(req.body.passwords.old, user.hashedPassword)
 
     if (!correctPassword || !req.body.passwords.new) {
       throw new BadParamsError()
     }
 
     // hash new password
-    let newHashedPassword = await bcrypt.hash(
-      req.body.passwords.new,
-      bcryptSaltRounds
-    )
+    let newHashedPassword = await bcrypt.hash(req.body.passwords.new, bcryptSaltRounds)
 
     // change pwd
     user.hashedPassword = newHashedPassword

@@ -7,7 +7,8 @@ process.env.sikko = 99
 
 // require route files
 const userRoutes = require('./app/routes/user_routes')
-// const restaurantRoutes = require('./app/routes/restaurant_routes')
+const yelpRoutes = require('./app/routes/yelp_route')
+const businessRoutes = require('./app/routes/business_routes')
 // const reviewRoutes = require('./app/routes/review_routes')
 
 // require middleware
@@ -42,9 +43,7 @@ const app = express()
 
 // set CORS headers on response from this API using the `cors` NPM package
 // `CLIENT_ORIGIN` is an environment variable that will be set on Heroku
-app.use(
-  cors({ origin: process.env.CLIENT_ORIGIN || `http://localhost:${clientDevPort}` })
-)
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || `http://localhost:${clientDevPort}` }))
 
 // define port for API to run on
 const port = process.env.PORT || serverDevPort
@@ -65,7 +64,8 @@ app.use(requestLogger)
 
 // routes
 app.use(userRoutes)
-// app.use(restaurantRoutes)
+app.use(yelpRoutes)
+app.use(businessRoutes)
 // app.use(reviewRoutes)
 
 // register error handling middleware

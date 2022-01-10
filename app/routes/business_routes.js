@@ -1,10 +1,10 @@
 // require NPM packages
 const express = require('express')
 const passport = require('passport')
-const axios = require('axios')
+// const axios = require('axios')
 
 // pull in Mongoose model for examples
-const Restaurant = require('../models/Restaurant')
+const Business = require('../models/Business')
 
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
@@ -32,51 +32,23 @@ const requireToken = passport.authenticate('bearer', {
 const router = express.Router()
 
 // INDEX
-// GET /examples
-router.get('/restaurants', (req, res, next) => {
-  const token = process.env.YELP_API_KEY
-  let { term, location } = req.query
-  let URL = process.env.YELP_SEARCH
-
-  URL = URL + '?term=sub&location=boston&limit=15'
-
-  // https://api.yelp.com/v3/businesses/search?term=coffee&location=Boston&limit=10&/radius=1000
-  const config = {
-    headers: { Authorization: `Bearer ${token}` }
-  }
-
-  axios
-    .get(URL, config)
-    .then((response) => {
-      console.log(response)
-      res.status(200).json({ data: response.data })
-    })
-    .catch(next)
-})
-
-// ===================== favorite-restaurants =========================== //
-// INDEX
 // GET / favorite-restaurants
 
-router.get(
-  '/favorite-restaurants',
-  requireToken,
-  (req, res, next) => {
-    Restaurant.find()
-      .populate('owner')
-      .then((restaurants) => {
-        console.log(restaurants)
-        // `examples` will be an array of Mongoose documents
-        // we want to convert each one to a POJO, so we use `.map` to
-        // apply `.toObject` to each one
-        return restaurants.map((restaurant) => restaurant.toObject())
-      })
-    // respond with status 200 and JSON of the examples
-      .then((restaurants) => res.status(200).json({ restaurants }))
-    // if an error occurs, pass it to the handler
-      .catch(next)
-  }
-)
+// router.get('/favorite-restaurants', requireToken, (req, res, next) => {
+//   Restaurant.find()
+//     .populate('owner')
+//     .then((restaurants) => {
+//       console.log(restaurants)
+//       // `examples` will be an array of Mongoose documents
+//       // we want to convert each one to a POJO, so we use `.map` to
+//       // apply `.toObject` to each one
+//       return restaurants.map((restaurant) => restaurant.toObject())
+//     })
+//     // respond with status 200 and JSON of the examples
+//     .then((restaurants) => res.status(200).json({ restaurants }))
+//     // if an error occurs, pass it to the handler
+//     .catch(next)
+// })
 
 // // SHOW
 // // GET /examples/5a7db6c74d55bc51bdf39793
@@ -94,24 +66,21 @@ router.get(
 
 // CREATE
 // POST / favorite-restaurants
-router.post(
-  '/favorite-restaurants',
-  requireToken,
-  (req, res, next) => {
-    // set owner of new example to be current user
-    req.body.restaurant.owner = req.user.id
-    console.log(req.body.restaurant)
-    Restaurant.create(req.body.restaurant)
+router.post('/business', requireToken, (req, res, next) => {
+  // set owner of new example to be current user
+  req.body.business.owner = req.user.id
+
+  Business.create(req.body.business)
     // respond to succesful `create` with status 201 and JSON of new "example"
-      .then((restaurant) => {
-        res.status(201).json({ restaurant: restaurant.toObject() })
-      })
+
+    .then((business) => {
+      res.status(201).json({ business })
+    })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
     // can send an error message back to the client
-      .catch(next)
-  }
-)
+    .catch(next)
+})
 
 // // UPDATE
 // // PATCH /examples/5a7db6c74d55bc51bdf39793
@@ -143,24 +112,21 @@ router.post(
 
 // DESTROY
 // DELETE /examples/5a7db6c74d55bc51bdf39793
-router.delete(
-  '/favorite-restaurants/:restaurant_id',
-  requireToken,
-  (req, res, next) => {
-    Restaurant.findById(req.params.restaurant_id)
-      .then(handle404)
-      .then((doc) => {
-        console.log(doc)
-        // throw an error if current user doesn't own `example`
-        requireOwnership(req, doc)
-        // delete the example ONLY IF the above didn't throw
-        doc.deleteOne()
-      })
-    // send back 204 and no content if the deletion succeeded
-      .then(() => res.sendStatus(204))
-    // if an error occurs, pass it to the handler
-      .catch(next)
-  }
-)
+// router.delete('/favorite-restaurants/:restaurant_id', requireToken, (req, res, next) => {
+//   Restaurant.findById(req.params.restaurant_id)
+//     .then(handle404)
+//     .then((doc) => {
+//       console.log(doc)
+//       // throw an error if current user doesn't own `example`
+//       requireOwnership(req, doc)
+
+//       // delete the example ONLY IF the above didn't throw
+//       doc.deleteOne()
+//     })
+//     // send back 204 and no content if the deletion succeeded
+//     .then(() => res.sendStatus(204))
+//     // if an error occurs, pass it to the handler
+//     .catch(next)
+// })
 
 module.exports = router
