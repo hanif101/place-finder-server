@@ -9,7 +9,7 @@ process.env.sikko = 99
 const userRoutes = require('./app/routes/user_routes')
 const yelpRoutes = require('./app/routes/yelp_route')
 const businessRoutes = require('./app/routes/business_routes')
-// const reviewRoutes = require('./app/routes/review_routes')
+const reviewRoutes = require('./app/routes/review_routes')
 
 // require middleware
 const errorHandler = require('./lib/error_handler')
@@ -66,7 +66,7 @@ app.use(requestLogger)
 app.use(userRoutes)
 app.use(yelpRoutes)
 app.use(businessRoutes)
-// app.use(reviewRoutes)
+app.use(reviewRoutes)
 
 // register error handling middleware
 app.use(errorHandler)

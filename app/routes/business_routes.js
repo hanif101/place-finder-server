@@ -1,3 +1,4 @@
+/* eslint-disable no-tabs */
 // require NPM packages
 const express = require('express')
 const passport = require('passport')
@@ -32,37 +33,38 @@ const requireToken = passport.authenticate('bearer', {
 const router = express.Router()
 
 // INDEX
-// GET / favorite-restaurants
+// GET / bsuiness
+router.get('/business', requireToken, (req, res, next) => {
+  Business.find()
+    .populate('owner')
+    .populate('reviews.owner')
+    .then((businesses) => {
+      // `examples` will be an array of Mongoose documents
+      // we want to convert each one to a POJO, so we use `.map` to
+      // apply `.toObject` to each one
+      return businesses.map((business) => business.toObject())
+    })
+    // respond with status 200 and JSON of the examples
+    .then((business) => res.status(200).json({ business }))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
 
-// router.get('/favorite-restaurants', requireToken, (req, res, next) => {
-//   Restaurant.find()
-//     .populate('owner')
-//     .then((restaurants) => {
-//       console.log(restaurants)
-//       // `examples` will be an array of Mongoose documents
-//       // we want to convert each one to a POJO, so we use `.map` to
-//       // apply `.toObject` to each one
-//       return restaurants.map((restaurant) => restaurant.toObject())
-//     })
-//     // respond with status 200 and JSON of the examples
-//     .then((restaurants) => res.status(200).json({ restaurants }))
-//     // if an error occurs, pass it to the handler
-//     .catch(next)
-// })
-
-// // SHOW
-// // GET /examples/5a7db6c74d55bc51bdf39793
-// router.get('/examples/:id', requireToken, (req, res, next) => {
-// 	// req.params.id will be set based on the `:id` in the route
-// 	Example.findById(req.params.id)
-// 		.then(handle404)
-// 		// if `findById` is succesful, respond with 200 and "example" JSON
-// 		.then((example) =>
-// 			res.status(200).json({ example: example.toObject() })
-// 		)
-// 		// if an error occurs, pass it to the handler
-// 		.catch(next)
-// })
+// SHOW
+// GET /business/:id
+router.get('/business/:id', requireToken, (req, res, next) => {
+  // req.params.id will be set based on the `:id` in the route
+  Business.findById(req.params.id)
+    .populate('reviews.owner')
+    .populate('owner')
+    .then(handle404)
+  // if `findById` is succesful, respond with 200 and "example" JSON
+    .then((business) =>
+      res.status(200).json({ response: business.toObject() })
+    )
+  // if an error occurs, pass it to the handler
+    .catch(next)
+})
 
 // CREATE
 // POST / favorite-restaurants
@@ -71,7 +73,7 @@ router.post('/business', requireToken, (req, res, next) => {
   req.body.business.owner = req.user.id
 
   Business.create(req.body.business)
-    // respond to succesful `create` with status 201 and JSON of new "example"
+  // respond to succesful `create` with status 201 and JSON of new "example"
 
     .then((business) => {
       res.status(201).json({ business })
@@ -112,21 +114,21 @@ router.post('/business', requireToken, (req, res, next) => {
 
 // DESTROY
 // DELETE /examples/5a7db6c74d55bc51bdf39793
-// router.delete('/favorite-restaurants/:restaurant_id', requireToken, (req, res, next) => {
-//   Restaurant.findById(req.params.restaurant_id)
-//     .then(handle404)
-//     .then((doc) => {
-//       console.log(doc)
-//       // throw an error if current user doesn't own `example`
-//       requireOwnership(req, doc)
+router.delete('/business/:id', requireToken, (req, res, next) => {
+  Business.findById(req.params.id)
+    .then(handle404)
+    .then((doc) => {
+      console.log(doc)
+      // throw an error if current user doesn't own `example`
+      requireOwnership(req, doc)
 
-//       // delete the example ONLY IF the above didn't throw
-//       doc.deleteOne()
-//     })
-//     // send back 204 and no content if the deletion succeeded
-//     .then(() => res.sendStatus(204))
-//     // if an error occurs, pass it to the handler
-//     .catch(next)
-// })
+      // delete the example ONLY IF the above didn't throw
+      doc.deleteOne()
+    })
+    // send back 204 and no content if the deletion succeeded
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
 
 module.exports = router
