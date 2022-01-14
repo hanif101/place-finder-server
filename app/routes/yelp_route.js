@@ -22,21 +22,12 @@ router.post(
     const { term, zipcode } = req.body.data.credentials
 
     const URL = store.yelpUrl + `/search?term=${term}&location=${zipcode}&limit=20&/radius=1000`
-    // const config = {
-    //   headers: { Authorization: `Bearer ${store.yelpToken}` }
-    // }
+    const config = {
+      'Access-Control-Allow-Origin': '*',
+      headers: { Authorization: `Bearer ${store.yelpToken}` }
+    }
 
-    const business = await axios.get({
-      url: URL,
-      method: 'GET',
-      headers: {
-        'accept': 'application/json',
-        'x-requested-with': 'xmlhttprequest',
-        'Access-Control-Allow-Origin': '*',
-        'Authorization': `Bearer ${store.yelpToken}`
-      }
-
-    })
+    const business = await axios.get(URL, config)
 
     // response
     res.status(201).json({ business: business.data })
@@ -52,21 +43,11 @@ router.get(
     const { id } = req.params
 
     const URL = store.yelpUrl + `/${id}/reviews`
-    // const config = {
-    //   headers: { Authorization: `Bearer ${store.yelpToken}` }
-    // }
+    const config = {
+      headers: { Authorization: `Bearer ${store.yelpToken}` }
+    }
 
-    const business = await axios.get({
-      url: URL,
-      method: 'GET',
-      headers: {
-        'accept': 'application/json',
-        'x-requested-with': 'xmlhttprequest',
-        'Access-Control-Allow-Origin': '*',
-        'Authorization': `Bearer ${store.yelpToken}`
-      }
-
-    })
+    const business = await axios.get(URL, config)
     // response
     res.status(201).json({ business: business.data })
   })
