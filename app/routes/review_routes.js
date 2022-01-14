@@ -9,6 +9,7 @@ const Business = require('../models/Business')
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
 const customErrors = require('../../lib/custom_errors')
+const { handle } = require('express/lib/application')
 
 // we'll use this function to send 404 when non-existant document is requested
 const handle404 = customErrors.handle404
@@ -16,9 +17,6 @@ const handle404 = customErrors.handle404
 // that's owned by someone else
 const requireOwnership = customErrors.requireOwnership
 
-// this is middleware that will remove blank fields from `req.body`, e.g.
-// { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
-const removeBlanks = require('../../lib/remove_blank_fields')
 // passing this as a second argument to `router.<verb>` will make it
 // so that a token MUST be passed for that route to be available
 // it will also set `req.user`
@@ -77,48 +75,46 @@ router.post('/review', requireToken, asyncErrorWrapper(async (req, res, next) =>
 }))
 
 // UPDATE
-// PATCH /examples/5a7db6c74d55bc51bdf39793
-// router.patch(
-//   '/examples/:id',
-//   requireToken,
-//   removeBlanks,
-//   (req, res, next) => {
-//     // if the client attempts to change the `owner` property by including a new
-//     // owner, prevent that by deleting that key/value pair
-//     delete req.body.example.owner
+// PATCH /review/5a7db6c74d55bc51bdf39793
+router.patch(
+  '/review/:id',
+  requireToken,
+  asyncErrorWrapper(async (req, res, next) => {
+    const reviewId = req.params.id
 
-//     Example.findById(req.params.id)
-//       .then(handle404)
-//       .then((example) => {
-//         // pass the `req` object and the Mongoose record to `requireOwnership`
-//         // it will throw an error if the current user isn't the owner
-//         requireOwnership(req, example)
+    const business = await Business.findById(req.body.review.businessId)
+    handle404(business)
+    requireOwnership(req, business)
+    business.reviews.forEach(review => {
+      if (review._id.equals(reviewId)) {
+        review.content = req.body.review.content
+      }
+    })
 
-//         // pass the result of Mongoose's `.update` to the next `.then`
-//         return example.updateOne(req.body.example)
-//       })
-//     // if that succeeded, return 204 and no JSON
-//       .then(() => res.sendStatus(204))
-//     // if an error occurs, pass it to the handler
-//       .catch(next)
-//   }
-// )
+    await business.save()
+
+    res.status(201).json({review: business.reviews})
+  })
+)
 
 // DESTROY
 // DELETE /examples/5a7db6c74d55bc51bdf39793
-// router.delete('/examples/:id', requireToken, (req, res, next) => {
-//   Example.findById(req.params.id)
-//     .then(handle404)
-//     .then((example) => {
-//       // throw an error if current user doesn't own `example`
-//       requireOwnership(req, example)
-//       // delete the example ONLY IF the above didn't throw
-//       example.deleteOne()
-//     })
-//   // send back 204 and no content if the deletion succeeded
-//     .then(() => res.sendStatus(204))
-//   // if an error occurs, pass it to the handler
-//     .catch(next)
-// })
+router.delete('/review/:id', requireToken, (req, res, next) => {
+  Business.findOne({owner: req.user._id})
+    .then(handle404)
+    .then((business) => {
+      // throw an error if current user doesn't own `example`
+      requireOwnership(req, business)
+      // delete the example ONLY IF the above didn't throw
+      const reviewId = req.params.id
+      business.reviews = business.reviews.filter(review => review._id.toString() !== reviewId)
+
+      business.save()
+    })
+  // send back 204 and no content if the deletion succeeded
+    .then(() => res.sendStatus(204))
+  // if an error occurs, pass it to the handler
+    .catch(next)
+})
 
 module.exports = router
