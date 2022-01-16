@@ -21,4 +21,4 @@ Place Finder server has been used and built by express library as a backend API.
 - passport-http-bearer
 
 ### ERD
-![erd](/public/1.jpeg)
+![erd](public/1.jpeg)
